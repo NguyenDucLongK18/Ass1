@@ -1,0 +1,132 @@
+﻿@model IEnumerable<Ass1.ViewModels.NewsArticleViewModel>
+
+@if (User.Identity.IsAuthenticated)
+{
+    @if (User.IsInRole("1"))
+    {
+        <p>
+            <a asp-action="Create">Create New</a>
+        </p>
+    }
+}
+<div id="newsContainer">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    Title
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Headline)
+                </th>
+                <th>
+                    Created Date
+                </th>
+                <th>
+                    Source
+                </th>
+                <th>
+                    Categories
+                </th>
+                <th>
+                    Tags
+                </th>
+                @if (User.Identity.IsAuthenticated)
+                {
+                    @if (User.IsInRole("1"))
+                    {
+                        <th></th>
+                    }
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="col-3">
+                        @Html.DisplayFor(modelItem => item.NewsTitle)
+                    </td>
+                    <td class="col-3">
+                        @Html.DisplayFor(modelItem => item.Headline)
+                    </td>
+                    <td class="col-1">
+                        @Html.DisplayFor(modelItem => item.CreatedDate)
+                    </td>
+                    <td class="col-1">
+                        @Html.DisplayFor(modelItem => item.NewsSource)
+                    </td>
+                    <td class="col-1">
+                        @Html.DisplayFor(modelItem => item.SelectedCategoryName)
+                    </td>
+                    <td class="col-1">
+                        @(string.Join(", ", item.SelectedTagNames))
+                    </td>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        @if (User.IsInRole("1"))
+                        {
+                            <td class="col-4">
+                                <a asp-action="Edit" asp-route-id="@item.NewsArticleId">Edit</a> |
+                                <a asp-action="Details" asp-route-id="@item.NewsArticleId">Details</a> |
+                                <a href="#" class="text-danger delete-link" data-id="@item.NewsArticleId" data-title="@item.NewsTitle"
+                                   data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" onclick="setDeleteModalData(this)">Delete</a>
+                            </td>
+                        }
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<div class="pagination d-flex justify-content-center mt-3">
+    @if (ViewBag.CurrentPage > 1)
+    {
+        <button class="page-btn btn btn-primary me-2" data-page="1">First</button>
+        <button class="page-btn btn btn-primary me-2" data-page="@(ViewBag.CurrentPage - 1)">Previous</button>
+    }
+
+    @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
+    {
+        <button class="page-btn btn btn-primary me-2 @(i == ViewBag.CurrentPage ? "active" : "")" data-page="@i">@i</button>
+    }
+
+    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+    {
+        <button class="page-btn btn btn-primary me-2" data-page="@(ViewBag.CurrentPage + 1)">Next</button>
+        <button class="page-btn btn btn-primary" data-page="@ViewBag.TotalPages">Last</button>
+    }
+</div>
+
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete <strong id="deleteItemTitle"></strong>? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <form id="deleteForm" asp-action="Delete" asp-controller="NewsArticle" method="post">
+                    <input type="hidden" name="id" id="deleteItemId" />
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function setDeleteModalData(link) {
+        console.log("AAA"); // Make sure it logs
+        let newsId = link.getAttribute("data-id");
+        let newsTitle = link.getAttribute("data-title");
+
+        document.getElementById("deleteItemId").value = newsId;
+        document.getElementById("deleteItemTitle").textContent = newsTitle;
+    }
+</script>

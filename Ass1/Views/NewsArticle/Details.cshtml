@@ -1,0 +1,53 @@
+﻿@model Ass1.ViewModels.NewsArticleViewModel
+
+@{
+    ViewData["Title"] = "News Details";
+}
+
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h2>@Model.NewsTitle</h2>
+            <small class="text-light">Published on @Model.CreatedDate.ToString() by @Model.CreatedBy</small>
+            @if (Model.UpdatedBy != null) {
+                <br/>
+                <small class="text-light">Updated on @Model.ModifiedDate.ToString() by @Model.UpdatedBy</small>
+            }
+        </div>
+
+        <div class="card-body">
+            <h5 class="text-muted">@Model.Headline</h5>
+            <p>@Model.NewsContent</p>
+
+            <div class="mt-3">
+                <strong>Source:</strong> <a href="@Model.NewsSource" target="_blank">@Model.NewsSource</a>
+            </div>
+
+            <div class="mt-3">
+                <strong>Status:</strong>
+                <span class="badge @(Model.NewsStatus == true ? "bg-success" : "bg-warning")">
+                    @Model.NewsStatus
+                </span>
+            </div>
+
+            <div class="mt-3">
+                <strong>Tags:</strong>
+                @if (Model.Tags.Any())
+                {
+                    foreach (var tag in Model.Tags)
+                    {
+                        <span class="badge bg-secondary">@tag.TagName</span>
+                    }
+                }
+                else
+                {
+                    <span class="text-muted">No tags</span>
+                }
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <a asp-area="" asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
+        </div>
+    </div>
+</div>

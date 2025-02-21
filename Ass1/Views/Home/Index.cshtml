@@ -1,0 +1,32 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<h2 class="d-flex justify-content-center">Latest News</h2>
+<div id="news-container">Loading...</div>
+
+<script>
+    $(document).ready(function () {
+        loadNews(1); // Load the first page on page load
+
+        // Handle pagination button clicks
+        $(document).on("click", ".page-btn", function () {
+            var page = $(this).data("page");
+            loadNews(page);
+        });
+
+        function loadNews(page) {
+            $.ajax({
+                url: "/NewsArticle/GetNewsArticles",
+                type: "GET",
+                data: { page: page, pageSize: 3 },
+                success: function (data) {
+                    $("#news-container").html(data);
+                },
+                error: function () {
+                    $("#news-container").html("<p>Failed to load news.</p>");
+                }
+            });
+        }
+    });
+</script>
