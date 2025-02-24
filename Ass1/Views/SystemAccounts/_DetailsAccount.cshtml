@@ -1,0 +1,53 @@
+﻿@model Ass1.ViewModels.SystemAccountViewModel
+
+<dl class="row">
+    <dt class="col-12 col-md-4 text-muted font-weight-bold mb-2">
+        Name
+    </dt>
+    <dd class="col-12 col-md-8 mb-3">
+        <div class="p-2 border rounded bg-light">
+            @Html.DisplayFor(model => model.AccountName)
+        </div>
+    </dd>
+
+    <dt class="col-12 col-md-4 text-muted font-weight-bold mb-2">
+        Email
+    </dt>
+    <dd class="col-12 col-md-8 mb-3">
+        <div class="p-2 border rounded bg-light">
+            @Html.DisplayFor(model => model.AccountEmail)
+        </div>
+    </dd>
+
+    <dt class="col-12 col-md-4 text-muted font-weight-bold mb-2">
+        Role
+    </dt>
+    <dd class="col-12 col-md-8 mb-3">
+        <div class="p-2 border rounded bg-light">
+            <!-- Role dropdown (editable) -->
+            <select asp-for="AccountRole" class="form-control" disabled>
+                <option value="">-- Select Role --</option>
+                <option value="1" selected="@((Model.AccountRole == 1) ? true : null)">Staff</option>
+                <option value="2" selected="@((Model.AccountRole == 2) ? true : null)">Lecturer</option>
+            </select>
+        </div>
+    </dd>
+
+    <dt class="col-12 col-md-4 text-muted font-weight-bold mb-2">
+        Status: 
+    </dt>
+    <dd class="col-12 col-md-8 mb-3">
+        <span class="badge @(Model.IsActive.HasValue ? (Model.IsActive.Value ? "bg-success" : "bg-warning") : "bg-success")">
+            @(Model.IsActive.HasValue ? (Model.IsActive.Value ? "Active" : "Inactive") : "Active")
+        </span>
+    </dd>
+
+    <dt class="col-12 col-md-4 text-muted font-weight-bold mb-2">
+        Password
+    </dt>
+    <dd class="col-12 col-md-8 mb-3">
+        <div class="p-2 border rounded bg-light">
+            @Html.DisplayFor(model => model.AccountPassword)
+        </div>
+    </dd>
+</dl>

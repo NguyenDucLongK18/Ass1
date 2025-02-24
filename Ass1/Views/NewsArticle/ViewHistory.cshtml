@@ -1,0 +1,50 @@
+﻿@model IEnumerable<Ass1.ViewModels.NewsArticleViewModel>
+
+@{
+    ViewData["Title"] = "User History";
+}
+
+<h1 class="mb-4">User History</h1>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No history available for this user.</div>
+}
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    @foreach (var article in Model)
+    {
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">@article.NewsTitle</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">@article.Headline</p>
+
+                    <p><strong>Created On:</strong> @article.CreatedDate?.ToString("yyyy-MM-dd")</p>
+                    <p><strong>Updated On:</strong> @article.ModifiedDate?.ToString("yyyy-MM-dd")</p>
+
+                    <p>
+                        <strong>Participation:</strong>
+                        @if (article.CreatedById == ViewBag.CurrentUserId && article.UpdatedById == ViewBag.CurrentUserId)
+                        {
+                            <span class="badge bg-success">Created & Updated</span>
+                        }
+                        else if (article.CreatedById == ViewBag.CurrentUserId)
+                        {
+                            <span class="badge bg-info">Created</span>
+                        }
+                        else if (article.UpdatedById == ViewBag.CurrentUserId)
+                        {
+                            <span class="badge bg-warning">Updated</span>
+                        }
+                        else {
+                            <span class="badge bg-warning">Fuck @ViewBag.CurrentUserId vs @article.CreatedById</span>
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+</div>

@@ -1,6 +1,7 @@
 using Ass1.Models;
 using Ass1.Repositories;
 using Ass1.Services;
+using Ass1.Utils;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDistributedMemoryCache(); 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -23,6 +26,8 @@ builder.Services.AddDbContext<FunewsManagementContext>(options =>
     options
     .UseLazyLoadingProxies()
     .UseSqlServer(builder.Configuration.GetConnectionString("FUNewsManagementDB")));
+
+builder.Services.AddSingleton<MailUtils>();
 
 builder.Services.AddScoped<SystemAccountRepository>();
 builder.Services.AddScoped<UserManagerService>();

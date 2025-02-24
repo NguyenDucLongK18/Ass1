@@ -1,0 +1,5 @@
+﻿@model Ass1.ViewModels.CategoryViewModel
+<form asp-action="Delete" method="post" id="form-data" novalidate>
+    <input type="hidden" asp-for="@Model.CategoryId" />
+    <p>Are you sure you want to delete <strong>@Model.CategoryName</strong> ? This action can not be undo.</p>
+</form>

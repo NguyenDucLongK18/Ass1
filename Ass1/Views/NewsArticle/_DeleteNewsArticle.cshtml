@@ -1,0 +1,5 @@
+﻿@model Ass1.ViewModels.NewsArticleViewModel
+<form asp-action="Delete" method="post" id="form-data" novalidate>
+    <input type="hidden" asp-for="NewsArticleId" />
+    <p>Are you sure you want to delete <strong>@Model.NewsTitle</strong> ? This action can not be undo.</p>
+</form>

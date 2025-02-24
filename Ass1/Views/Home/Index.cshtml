@@ -2,29 +2,47 @@
     ViewData["Title"] = "Home Page";
 }
 
-<h2 class="d-flex justify-content-center">Latest News</h2>
-<div id="news-container">Loading...</div>
+<h1 class="d-flex justify-content-center">Latest News</h1>
+<div class="card shadow-lg">
+    <div class="card-body p-4">
+        <div id="news-container">Loading...</div>
+    </div>
+</div>
 
 <script>
     $(document).ready(function () {
-        loadNews(1); // Load the first page on page load
+        loadNews(1);
 
         // Handle pagination button clicks
         $(document).on("click", ".page-btn", function () {
-            var page = $(this).data("page");
+            const page = $(this).data("page");
             loadNews(page);
         });
 
+        // Handle search button click
+        $(document).on("click", "#searchBtn", function () {
+            loadNews(1);
+        });
+
         function loadNews(page) {
+            const searchTerm = $("#newsSearch").val();
+
             $.ajax({
                 url: "/NewsArticle/GetNewsArticles",
                 type: "GET",
-                data: { page: page, pageSize: 3 },
+                data: { page: page, pageSize: 3, searchTerm: searchTerm },
                 success: function (data) {
                     $("#news-container").html(data);
+                    $("#newsSearch").value = searchTerm;
                 },
-                error: function () {
-                    $("#news-container").html("<p>Failed to load news.</p>");
+                error: function (xhr, status, error) {
+                    console.error("AJAX Error:", {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        responseText: xhr.responseText,
+                        error: error
+                    });
+                    $("#news-container").html("<p>Failed to load news. Check the console for details.</p>");
                 }
             });
         }

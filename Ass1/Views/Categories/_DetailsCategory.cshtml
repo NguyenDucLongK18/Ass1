@@ -1,0 +1,43 @@
+﻿@model Ass1.ViewModels.CategoryViewModel
+
+@{
+    ViewData["Title"] = "Category Details";
+}
+
+<div>
+    <h5 class="modal-title">@Html.DisplayFor(model => model.CategoryName)</h5>
+
+    <div class="mt-3">
+        <strong>Description:</strong>
+        <span>@Html.DisplayFor(model => model.CategoryDescription)</span>
+    </div>
+
+    <div class="mt-3">
+        <strong>Status:</strong>
+        <span class="badge @(Model.IsActive ? "bg-success" : "bg-warning")">
+            @(Model.IsActive ? "Active" : "Inactive")
+        </span>
+    </div>
+
+    <div class="mt-3">
+        <strong>Parent:</strong>
+        <button class="badge bg-secondary"
+                onclick="loadModal('/Categories/Details/@Model.ParentCategoryId', 'Category Details', false)">
+            @Model.ParentCategory.CategoryName
+        </button>
+    </div>
+
+    @if (Model.SubCategories != null && Model.SubCategories.Any())
+    {
+        <div class="mt-3">
+            <strong>Subcategories:</strong>
+            @foreach (var subCategory in Model.SubCategories)
+            {
+                <button class="badge bg-secondary"
+                        onclick="loadModal('/Categories/Details/@subCategory.CategoryId', 'Category Details', false)">
+                    @subCategory.CategoryName
+                </button>
+            }
+        </div>
+    }
+</div>

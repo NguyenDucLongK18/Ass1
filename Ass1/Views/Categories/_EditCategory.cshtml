@@ -1,0 +1,35 @@
+﻿@model Ass1.ViewModels.CategoryViewModel
+
+@{
+    ViewData["Title"] = "Edit Category";
+}
+
+<form asp-action="Edit" method="post" id="form-data" novalidate>
+    <input type="hidden" asp-for="CategoryId" />
+
+    <div class="mb-3">
+        <label asp-for="CategoryName" class="form-label"><strong>Category Name:</strong></label>
+        <input asp-for="CategoryName" class="form-control" />
+        <span asp-validation-for="CategoryName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="CategoryDescription" class="form-label"><strong>Category Description:</strong></label>
+        <input asp-for="CategoryDescription" class="form-control" />
+        <span asp-validation-for="CategoryDescription" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="ParentCategoryId" class="form-label"><strong>Parent Category:</strong></label>
+        <select asp-for="ParentCategoryId" class="form-control" asp-items="ViewBag.ParentCategoryId">
+            <option value="">None</option>
+        </select>
+        <span asp-validation-for="ParentCategoryId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="IsActive" class="form-label"><strong>Active:</strong></label>
+        <input type="checkbox" asp-for="IsActive" class="form-check-input" />
+        <span asp-validation-for="IsActive" class="text-danger"></span>
+    </div>
+</form>

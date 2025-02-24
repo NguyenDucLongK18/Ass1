@@ -1,5 +1,6 @@
 ﻿using Ass1.Models;
 using Ass1.Services;
+using Ass1.Utils;
 using Ass1.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,9 +10,7 @@ namespace Ass1.Controllers
     public class NewsArticleController : Controller
     {
         private readonly NewsArticleService _newsArticleService;
-
         private readonly TagService _tagService;
-
         private readonly CategoryService _categoryService;
 
         public NewsArticleController(NewsArticleService newsArticleService, TagService tagService, CategoryService categoryService)
@@ -21,35 +20,22 @@ namespace Ass1.Controllers
             _categoryService = categoryService;
         }
 
-        public IActionResult GetNewsArticles(int page = 1, int pageSize = 2)
+        public IActionResult GetNewsArticles(string searchTerm = "", int page = 1, int pageSize = 2)
         {
             int totalArticles;
 
             var userRoleClaim = User.FindFirst(System.Security.Claims.ClaimTypes.Role);
-
             bool isStaff = userRoleClaim != null && userRoleClaim.Value == "1";
 
-            var articles = _newsArticleService.GetPaginatedNews(isStaff, page, pageSize, out totalArticles);
-
-            var articleViewModels = articles.Select(article => new NewsArticleViewModel
-            {
-                NewsArticleId = article.NewsArticleId,
-                NewsTitle = article.NewsTitle,
-                Headline = article.Headline,
-                CreatedDate = article.CreatedDate,
-                NewsContent = article.NewsContent,
-                NewsSource = article.NewsSource,
-                SelectedCategoryId = article.CategoryId,
-                SelectedCategoryName = article.Category?.CategoryName,
-                NewsStatus = article.NewsStatus ?? false,
-                CreatedBy = article.CreatedBy?.AccountName,
-                UpdatedBy = article.UpdatedBy?.AccountName,
-                ModifiedDate = article.ModifiedDate,
-                SelectedTagNames = article.Tags.Select(t => t.TagName).ToList()
-            }).ToList();
+            var articleViewModels = _newsArticleService.GetPaginatedNews(isStaff, searchTerm, page, pageSize, out totalArticles);
 
             ViewBag.TotalPages = (int)Math.Ceiling((double)totalArticles / pageSize);
             ViewBag.CurrentPage = page;
+            ViewBag.SearchTerm = searchTerm;
+
+            // Display success or error messages
+            ViewBag.SuccessMessage = TempData["SuccessMessage"];
+            ViewBag.ErrorMessage = TempData["ErrorMessage"];
 
             return PartialView("_GetNewsArticles", articleViewModels);
         }
@@ -58,11 +44,10 @@ namespace Ass1.Controllers
         [HttpGet]
         public IActionResult Create()
         {
-            var newsViewModel = new NewsArticleViewModel{
-                Tags = _tagService.GetAllTags(),
-                Categories = _categoryService.GetAllCategories(),
-            };
-            return View(newsViewModel);
+            var newsViewModel = new NewsArticleViewModel();
+            ViewBag.Categories = _categoryService.GetActiveCategory();
+            ViewBag.Tags = _tagService.GetAllTags();
+            return PartialView("_CreateNewsArticle", newsViewModel);
         }
 
         [Authorize(Roles = "1")]
@@ -71,159 +56,158 @@ namespace Ass1.Controllers
         {
             if (!ModelState.IsValid)
             {
-                articleViewModel.Tags = _tagService.GetAllTags();
-                articleViewModel.Categories = _categoryService.GetAllCategories();
-                return View(articleViewModel);
+                ViewBag.Categories = _categoryService.GetActiveCategory();
+                ViewBag.Tags = _tagService.GetAllTags();
+                TempData["ErrorMessage"] = "There was an error creating the news article. Please check the input fields.";
+                return RedirectToAction("Index", "Home");
             }
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
 
-            short createdById = short.Parse(userIdClaim.Value);
-
-            var selectedTag = _tagService.GetByIds(articleViewModel.SelectedTagIds);
-            // convert data to viewModel
-            var newsArticle = new NewsArticle
+            try
             {
-                NewsTitle = articleViewModel.NewsTitle,
-                Headline = articleViewModel.Headline,
-                CreatedDate = DateTime.UtcNow,
-                NewsContent = articleViewModel.NewsContent,
-                NewsSource = articleViewModel.NewsSource,
-                CategoryId = articleViewModel.SelectedCategoryId,
-                NewsStatus = articleViewModel.NewsStatus,
-                CreatedById = createdById,
-                Tags = selectedTag ?? new List<Tag>()
-            };
+                articleViewModel.CreatedById = short.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+                // Save to database
+                _newsArticleService.CreateNewsArticle(articleViewModel);
 
-            // Save to database
-            _newsArticleService.CreateNewsArticle(newsArticle);
-
-            return RedirectToAction("Index", "Home");
+                TempData["SuccessMessage"] = "News article created successfully!";
+                return RedirectToAction("Index", "Home");
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "An error occurred while creating the news article. Please try again.";
+                return RedirectToAction("Index", "Home");
+            }
         }
 
-        [Authorize(Roles = "1")]
         [HttpGet]
         public IActionResult Details(string id)
         {
-            var newsDetail = _newsArticleService.GetNewsArticle(id);
+            var newsViewModel = _newsArticleService.GetNewsArticle(id);
 
-            if (newsDetail == null)
+            if (newsViewModel == null)
             {
-                return NotFound(); // Return 404 if article doesn't exist
+                TempData["ErrorMessage"] = "News article not found!";
+                return RedirectToAction(nameof(GetNewsArticles));
             }
 
-            string updatedName = null;
-
-            if (newsDetail.UpdatedBy != null)
-            {
-                updatedName = newsDetail.UpdatedBy.AccountName;
-            }
-
-            var newsViewModel = new NewsArticleViewModel
-            {
-                NewsArticleId = newsDetail.NewsArticleId,
-                NewsTitle = newsDetail.NewsTitle,
-                Headline = newsDetail.Headline,
-                NewsContent = newsDetail.NewsContent,
-                NewsSource = newsDetail.NewsSource,
-                CreatedDate = newsDetail.CreatedDate,
-                NewsStatus = newsDetail.NewsStatus ?? false,
-                CreatedBy = newsDetail.CreatedBy.AccountName,
-                ModifiedDate = newsDetail.ModifiedDate ?? null,
-                UpdatedBy = updatedName ?? null,
-                Tags = (List<Tag>)newsDetail.Tags
-            };
-
-            return View(newsViewModel);
+            return PartialView("_DetailsNewsArticle", newsViewModel);
         }
 
         [Authorize(Roles = "1")]
         [HttpGet]
         public IActionResult Edit(string id)
         {
-            var newsArticle = _newsArticleService.GetNewsArticle(id);
+            var newsViewModel = _newsArticleService.GetNewsArticle(id);
 
-            if (newsArticle == null)
+            if (newsViewModel == null)
             {
-                return NotFound(); // Return 404 if article doesn't exist
+                TempData["ErrorMessage"] = "News article not found!";
+                return RedirectToAction("Index", "Home");
             }
 
-            var newsViewModel = new NewsArticleViewModel
-            {
-                NewsArticleId = newsArticle.NewsArticleId,
-                NewsTitle = newsArticle.NewsTitle,
-                Headline = newsArticle.Headline,
-                NewsContent = newsArticle.NewsContent,
-                NewsSource = newsArticle.NewsSource,
-                CreatedDate = newsArticle.CreatedDate,
-                NewsStatus = newsArticle.NewsStatus ?? false,
-                SelectedCategoryId = newsArticle.CategoryId,
-                SelectedTagIds = newsArticle.Tags?.Select(t => t.TagId).ToList()
-            };
+            ViewBag.Categories = _categoryService.GetActiveCategory();
+            ViewBag.Tags = _tagService.GetAllTags();
 
-            ViewBag.Categories = _categoryService.GetAllCategories(); // For dropdown selection
-            ViewBag.Tags = _tagService.GetAllTags(); // For tag selection
-
-            return View(newsViewModel);
+            return PartialView("_EditNewsArticle", newsViewModel);
         }
 
         [Authorize(Roles = "1")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(NewsArticleViewModel model)
+        public IActionResult Edit(NewsArticleViewModel newViewModel)
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.Categories = _categoryService.GetAllCategories();
+                ViewBag.Categories = _categoryService.GetActiveCategory();
                 ViewBag.Tags = _tagService.GetAllTags();
-                return View(model);
+                TempData["ErrorMessage"] = "There was an error updating the news article. Please check the input fields.";
+                return RedirectToAction("Index", "Home");
             }
 
-            var existingArticle = _newsArticleService.GetNewsArticle(model.NewsArticleId);
-            if (existingArticle == null)
+            try
             {
-                return NotFound();
+                newViewModel.UpdatedById = short.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
+
+                var oldViewModel = _newsArticleService.GetNewsArticle(newViewModel.NewsArticleId);
+                if (oldViewModel == null)
+                {
+                    TempData["ErrorMessage"] = "News article not found!";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                _newsArticleService.UpdateNewsArticle(oldViewModel, newViewModel);
+
+                TempData["SuccessMessage"] = "News article edited successfully!";
+                return RedirectToAction("Index", "Home");
             }
-
-            var selectedTag = _tagService.GetByIds(model.SelectedTagIds);
-
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-
-            short updatedById = short.Parse(userIdClaim.Value);
-
-            existingArticle.NewsTitle = model.NewsTitle;
-            existingArticle.Headline = model.Headline;
-            existingArticle.NewsContent = model.NewsContent;
-            existingArticle.NewsSource = model.NewsSource;
-            existingArticle.NewsStatus = model.NewsStatus;
-            existingArticle.CategoryId = model.SelectedCategoryId;
-            existingArticle.UpdatedById = updatedById;
-            existingArticle.ModifiedDate = DateTime.UtcNow;
-
-            existingArticle.Tags.Clear();
-
-            // Update tags
-            existingArticle.Tags = selectedTag ?? new List<Tag>();
-
-            _newsArticleService.UpdateNewsArticle(existingArticle);
-
-            return RedirectToAction("Details", new { id = model.NewsArticleId });
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "An error occurred while updating the news article. Please try again.";
+                return RedirectToAction("Index", "Home");
+            }
         }
 
         [Authorize(Roles = "1")]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpGet]
         public IActionResult Delete(string id)
         {
             var existingArticle = _newsArticleService.GetNewsArticle(id);
             if (existingArticle == null)
             {
-                return NotFound();
+                TempData["ErrorMessage"] = "News article not found!";
+                return RedirectToAction(nameof(GetNewsArticles));
             }
-            existingArticle.Tags.Clear();
 
-            _newsArticleService.DeleteNewsArticle(existingArticle);
+            return PartialView("_DeleteNewsArticle", existingArticle);
+        }
+
+        [Authorize(Roles = "1")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Delete(NewsArticleViewModel model)
+        {
+            var existingArticle = _newsArticleService.GetNewsArticle(model.NewsArticleId);
+            if (existingArticle == null)
+            {
+                TempData["ErrorMessage"] = "News article not found!";
+                return RedirectToAction("Index", "Home");
+            }
+            try
+            {
+                _newsArticleService.DeleteNewsArticle(existingArticle);
+                TempData["SuccessMessage"] = "News article deleted successfully!";
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "An error occurred while deleting the news article. Please try again.";
+            }
 
             return RedirectToAction("Index", "Home");
+        }
+
+        [Authorize(Roles = "0")]
+        public IActionResult StatisticReport(DateTime? startDate, DateTime? endDate)
+        {
+            List<NewsStatisticViewModel> report = new List<NewsStatisticViewModel>();
+
+            // If both dates are provided, get the statistics.
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                report = _newsArticleService.GetNewsStatistics(startDate.Value, endDate.Value);
+            }
+
+            // Pass the dates back to the view for re-populating the filter fields.
+            ViewBag.StartDate = startDate;
+            ViewBag.EndDate = endDate;
+
+            return View(report);
+        }
+
+        [Authorize(Roles = "1")]
+        public IActionResult ViewHistory(short id)
+        {
+            var viewModels = _newsArticleService.DisplayHistory(id);
+            ViewBag.CurrentUserId = id;
+            return View(viewModels);
         }
     }
 }

@@ -1,0 +1,8 @@
+﻿@model Ass1.ViewModels.SystemAccountViewModel
+<form asp-action="Deactivate" method="post" id="form-data" novalidate>
+    <input type="hidden" asp-for="AccountId" />
+    <p>
+        Are you sure you want to @(Model.IsActive.HasValue ? (Model.IsActive.Value ? "deactive" : "reactive") : "deactive")
+        <strong>@Model.AccountName</strong> ?
+    </p>
+</form>

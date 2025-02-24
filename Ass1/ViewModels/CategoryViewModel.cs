@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Ass1.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace Ass1.ViewModels
 {
@@ -15,6 +16,7 @@ namespace Ass1.ViewModels
 
         public bool IsActive { get; set; } = true;
 
+        public Category? ParentCategory { get; set; }
         public List<CategoryViewModel>? SubCategories { get; set; } = new();
     }
 

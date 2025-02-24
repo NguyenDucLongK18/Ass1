@@ -1,0 +1,38 @@
+﻿@model Ass1.ViewModels.SystemAccountViewModel
+
+<form asp-action="Create" class="needs-validation" id="form-data" novalidate>
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <!-- Account Name -->
+    <div class="form-group mb-3">
+        <label asp-for="AccountName" class="form-label">Account Name</label>
+        <input asp-for="AccountName" class="form-control" required />
+        <span asp-validation-for="AccountName" class="text-danger"></span>
+    </div>
+
+    <!-- Account Email -->
+    <div class="form-group mb-3">
+        <label asp-for="AccountEmail" class="form-label">Account Email</label>
+        <input asp-for="AccountEmail" class="form-control" type="email" required />
+        <span asp-validation-for="AccountEmail" class="text-danger"></span>
+    </div>
+
+    <!-- Account Role -->
+    <div class="form-group mb-3">
+        <label asp-for="AccountRole" class="form-label">Account Role</label>
+        <select asp-for="AccountRole" class="form-select" required>
+            <option value="">Select Role</option>
+            <option value="0">Admin</option>
+            <option value="1">Staff</option>
+            <option value="2">Lecturer</option>
+        </select>
+        <span asp-validation-for="AccountRole" class="text-danger"></span>
+    </div>
+
+    <!-- Account Password -->
+    <div class="form-group mb-3">
+        <label asp-for="AccountPassword" class="form-label">Account Password</label>
+        <input asp-for="AccountPassword" class="form-control" type="text" required />
+        <span asp-validation-for="AccountPassword" class="text-danger"></span>
+    </div>
+</form>

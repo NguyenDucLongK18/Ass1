@@ -1,0 +1,149 @@
+﻿@model IEnumerable<Ass1.ViewModels.CategoryViewModel>
+
+@{
+    ViewData["Title"] = "Category Management";
+}
+
+<div class="container mt-4">
+    <!-- Header with Create Button -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Category Management</h2>
+        <button class="btn btn-success btn-sm text-white"
+                onclick="loadModal('/Categories/Create', 'Create News Article', true)"
+                aria-label="Create News Article">
+            + Create News Article
+        </button>
+    </div>
+
+    <!-- Search Form -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" action="@Url.Action("Index")" class="d-flex gap-2">
+                <input id="newsSearch" name="searchTerm" type="text" class="form-control flex-grow-1"
+                       placeholder="Search News Articles..." value="@ViewBag.SearchTerm"
+                       aria-label="Search News Articles" />
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category Cards Grid -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <!-- Category Name -->
+                        <h5 class="card-title mb-3">@item.CategoryName</h5>
+
+                        <!-- Category Description -->
+                        <p class="card-text text-muted small mb-3">@item.CategoryDescription</p>
+
+                        <!-- Status Badge -->
+                        <div class="mb-3">
+                            @if (item.IsActive == true)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else if (item.IsActive == false)
+                            {
+                                <span class="badge bg-danger">Inactive</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning">N/A</span>
+                            }
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary flex-grow-1"
+                                    onclick="loadModal('/Categories/Edit/@item.CategoryId', 'Update Category', true)">
+                                Edit
+                            </button>
+                            <button class="btn btn-sm btn-info text-white flex-grow-1"
+                                    onclick="loadModal('/Categories/Details/@item.CategoryId', 'Category Details', false)">
+                                Detail
+                            </button>
+                            <button class="btn btn-sm btn-danger flex-grow-1"
+                                    onclick="loadModal('/Categories/Delete/@item.CategoryId', 'Delete Category', true)">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Pagination -->
+    @if (ViewBag.TotalPages > 1)
+    {
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <!-- First Page -->
+                @if (ViewBag.CurrentPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="Index" asp-route-page="1" asp-route-searchTerm="@ViewBag.SearchTerm">First</a>
+                    </li>
+                }
+
+                <!-- Previous Page -->
+                @if (ViewBag.CurrentPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="Index"
+                           asp-route-page="@(ViewBag.CurrentPage - 1)"
+                           asp-route-searchTerm="@ViewBag.SearchTerm">&laquo;</a>
+                    </li>
+                }
+
+                @{
+                    var startPage = Math.Max(1, ViewBag.CurrentPage - 2);
+                    var endPage = Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2);
+
+                    if (startPage > 1)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+
+                    for (var i = startPage; i <= endPage; i++)
+                    {
+                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-page="@i"
+                               asp-route-searchTerm="@ViewBag.SearchTerm">@i</a>
+                        </li>
+                    }
+
+                    if (endPage < ViewBag.TotalPages)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+                }
+
+                <!-- Next Page -->
+                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="Index"
+                           asp-route-page="@(ViewBag.CurrentPage + 1)"
+                           asp-route-searchTerm="@ViewBag.SearchTerm">&raquo;</a>
+                    </li>
+                }
+
+                <!-- Last Page -->
+                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                {
+                    <li class="page-item">
+                        <a class="page-link" asp-action="Index"
+                           asp-route-page="@ViewBag.TotalPages"
+                           asp-route-searchTerm="@ViewBag.SearchTerm">Last</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+</div>

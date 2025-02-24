@@ -1,0 +1,124 @@
+﻿@model IEnumerable<Ass1.ViewModels.SystemAccountViewModel>
+
+@{
+    ViewData["Title"] = "System Accounts";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">System Accounts</h1>
+
+    <!-- Search Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" asp-action="Index" class="form-inline d-flex justify-content-between mb-3">
+                <input type="text" name="searchTerm" class="form-control w-100" placeholder="Search by name or email" value="@ViewBag.SearchTerm" />
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create New Account Button -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn btn-success"
+                onclick="loadModal('/SystemAccounts/Create', 'Create User', true)">
+            + Create New Account
+        </button>
+    </div>
+
+    <!-- Accounts Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>@Html.DisplayNameFor(model => model.AccountName)</th>
+                            <th>@Html.DisplayNameFor(model => model.AccountEmail)</th>
+                            <th>@Html.DisplayNameFor(model => model.AccountRole)</th>
+                            <th>@Html.DisplayNameFor(model => model.AccountPassword)</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@Html.DisplayFor(modelItem => item.AccountName)</td>
+                                <td>@Html.DisplayFor(modelItem => item.AccountEmail)</td>
+                                <td>
+                                    @switch (item.AccountRole)
+                                    {
+                                        case 1:
+                                            @:Staff
+                                            break;
+                                        case 2:
+                                            @:Lecturer
+                                            break;
+                                        case 0:
+                                            @:Admin
+                                            break;
+                                        default:
+                                            @:Unknown
+                                            break;
+                                    }
+                                </td>
+                                <td>@Html.DisplayFor(modelItem => item.AccountPassword)</td>
+                                <td>
+                                    <!-- Display Active or Inactive Status -->
+                                    <span class="badge @(item.IsActive.HasValue ? (item.IsActive.Value ? "bg-success" : "bg-warning") : "bg-success")">
+                                        @(item.IsActive.HasValue ? (item.IsActive.Value ? "Active" : "Inactive") : "Active")
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning text-white"
+                                            onclick="loadModal('/SystemAccounts/Edit/@item.AccountId', 'Edit User', true)">
+                                        Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-info text-white"
+                                            onclick="loadModal('/SystemAccounts/Details/@item.AccountId', 'User Details', true)">
+                                        Details
+                                    </button>
+                                    <button class="btn btn-sm btn-danger text-white"
+                                            onclick="loadModal('/SystemAccounts/Deactivate/@item.AccountId', 'Deactivate User', true)">
+                                        Deactivate
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            @if (ViewBag.TotalPages > 1)
+            {
+                <!-- Previous Page -->
+                <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { searchTerm = ViewBag.SearchTerm, page = ViewBag.CurrentPage - 1 })" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+
+                <!-- Page Numbers -->
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("Index", new { searchTerm = ViewBag.SearchTerm, page = i })">@i</a>
+                    </li>
+                }
+
+                <!-- Next Page -->
+                <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { searchTerm = ViewBag.SearchTerm, page = ViewBag.CurrentPage + 1 })" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            }
+        </ul>
+    </nav>
+</div>

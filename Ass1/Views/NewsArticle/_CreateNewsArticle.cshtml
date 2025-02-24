@@ -1,0 +1,78 @@
+﻿@model Ass1.ViewModels.NewsArticleViewModel
+
+@{
+    var tags = (IEnumerable<Ass1.Models.Tag>)ViewBag.Tags;
+    var categories = (IEnumerable<Ass1.ViewModels.CategoryViewModel>)ViewBag.Categories;
+}
+
+<form asp-action="Create" method="post" id="form-data" novalidate>
+
+    <!-- News Title -->
+    <div class="mb-3">
+        <label asp-for="NewsTitle" class="form-label fw-bold">News Title</label>
+        <input asp-for="NewsTitle" class="form-control" placeholder="Enter news title" required />
+        <span asp-validation-for="NewsTitle" class="text-danger"></span>
+    </div>
+
+    <!-- Headline -->
+    <div class="mb-3">
+        <label asp-for="Headline" class="form-label fw-bold">Headline</label>
+        <input asp-for="Headline" class="form-control" placeholder="Enter headline" required />
+        <span asp-validation-for="Headline" class="text-danger"></span>
+    </div>
+
+    <!-- News Content -->
+    <div class="mb-3">
+        <label asp-for="NewsContent" class="form-label fw-bold">Content</label>
+        <textarea asp-for="NewsContent" class="form-control" rows="4" placeholder="Write your article here..." required></textarea>
+        <span asp-validation-for="NewsContent" class="text-danger"></span>
+    </div>
+
+    <!-- News Source -->
+    <div class="mb-3">
+        <label asp-for="NewsSource" class="form-label fw-bold">Source</label>
+        <input asp-for="NewsSource" class="form-control" placeholder="Enter source URL" required />
+        <span asp-validation-for="NewsSource" class="text-danger"></span>
+    </div>
+
+    <!-- Category -->
+    <div class="mb-3">
+        <label asp-for="SelectedCategoryId" class="form-label fw-bold">Category</label>
+        <select asp-for="SelectedCategoryId" asp-items="@(new SelectList(categories, "CategoryId", "CategoryName"))" class="form-select" required>
+            <option value="">-- Select Category --</option>
+        </select>
+        <span asp-validation-for="SelectedCategoryId" class="text-danger"></span>
+    </div>
+
+    <!-- Tags -->
+    <div class="mb-3">
+        <label class="form-label fw-bold">Tags</label>
+        <div class="border rounded p-3">
+            @if (tags.Any())
+            {
+                @foreach (var tag in tags)
+                {
+                    <div class="form-check form-check-inline">
+                        <input type="checkbox" class="form-check-input" name="SelectedTagIds" value="@tag.TagId"
+                        @(Model.SelectedTagIds?.Contains(tag.TagId) == true ? "checked" : "") />
+                        <label class="form-check-label">@tag.TagName</label>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-muted">No tags available.</p>
+            }
+        </div>
+        <span asp-validation-for="SelectedTagIds" class="text-danger"></span>
+    </div>
+
+    <!-- News Status -->
+    <div class="mb-3">
+        <label asp-for="NewsStatus" class="form-label fw-bold">Status</label>
+        <select asp-for="NewsStatus" class="form-select">
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+        </select>
+    </div>
+</form>

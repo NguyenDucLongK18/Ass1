@@ -32,23 +32,23 @@
                             @if (User.IsInRole("0"))
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-controller="Admin" asp-action="ManageAccount">Manage Account</a>
+                                    <a class="nav-link text-dark" asp-controller="SystemAccounts" asp-action="Index">Manage Account</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-controller="Admin" asp-action="GenerateReport">Generate Report</a>
+                                    <a class="nav-link text-dark" asp-controller="NewsArticle" asp-action="StatisticReport">Generate Report</a>
                                 </li>
                             }
                             //Staff
                             @if (User.IsInRole("1"))
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-controller="Staff" asp-action="ManageCategory">Manage Category</a>
+                                    <a class="nav-link text-dark" asp-controller="Categories" asp-action="Index">Manage Category</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-controller="Staff" asp-action="History">View History</a>
+                                    <a class="nav-link text-dark" asp-controller="NewsArticle" asp-action="ViewHistory" asp-route-id="@(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "0")">View History</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-controller="User" asp-action="Profile">Profile</a>
+                                    <a class="nav-link text-dark" asp-controller="User" asp-action="Profile" asp-route-id="@(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? "0")">Profile</a>
                                 </li>
                             }
                         }
@@ -84,18 +84,136 @@
     </div>
     <script>
         $(document).ready(function () {
+            // AJAX loading
             $(document).ajaxStart(function () {
                 $("#globalLoadingOverlay").removeClass("d-none");
-            });
-
-            $(document).ajaxStop(function () {
+            }).ajaxStop(function () {
                 $("#globalLoadingOverlay").addClass("d-none");
             });
+
+            // Form loading (excluding forms with 'no-loader' class)
+            $("form:not(.no-loader)").on("submit", function (event) {
+                if (!this.checkValidity()) {
+                    event.preventDefault(); // Stop form submission
+                    event.stopPropagation();
+                    $(this).addClass("was-validated"); // Add Bootstrap validation class
+                } else {
+                    $("#globalLoadingOverlay").removeClass("d-none"); // Show loading overlay only if valid
+                }
+            });
+
+            // Hide overlay if the page is ready
+            $("#globalLoadingOverlay").addClass("d-none");
         });
     </script>
+
+    <script>
+        function loadModal(url, title, showSave = false) {
+            // Create unique modal ID
+            const modalId = `modal-${Date.now()}`;
+
+            // Create new modal structure
+            const newModal = document.createElement('div');
+            newModal.className = 'modal fade';
+            newModal.id = modalId;
+            newModal.innerHTML = `
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">${title}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Loading...</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            ${showSave ? '<button type="button" onclick="formSubmission()" class="btn btn-primary">Save Changes</button>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Append new modal to body
+            document.body.appendChild(newModal);
+
+            // Fetch and load content into the new modal body
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    newModal.querySelector('.modal-body').innerHTML = html;
+                    const modalInstance = new bootstrap.Modal(newModal);
+                    modalInstance.show();
+
+                    // Remove the modal from DOM when hidden
+                    newModal.addEventListener('hidden.bs.modal', () => newModal.remove());
+                })
+                .catch(err => {
+                    newModal.querySelector('.modal-body').innerHTML = '<p class="text-danger">Failed to load content.</p>';
+                });
+        }
+
+
+        function formSubmission() {
+            var form = document.getElementById("form-data");
+
+            // Bootstrap validation logic
+            (function () {
+                'use strict';
+                if (!form.checkValidity()) {
+                    form.classList.add('was-validated');
+                    return; // Stop submission if invalid
+                }
+                form.classList.add('was-validated');
+                form.submit(); // Submit if valid
+            })();
+        }
+    </script>
+    @section Scripts {
+        <script>
+            // Trigger client-side validation immediately on input/change
+            document.addEventListener('DOMContentLoaded', function () {
+                const form = document.getElementById('form-data');
+
+                // Listen for input events on form elements
+                form.querySelectorAll('input, select').forEach(function (input) {
+                    input.addEventListener('input', function () {
+                        // Trigger validation on the form
+                        form.classList.add('was-validated');
+                    });
+                });
+            });
+        </script>
+    }
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
     <div class="container">
+        @await Html.PartialAsync("_FlashMessage")
         <main role="main" class="pb-3">
             @RenderBody()
+
+            <div class="modal fade" id="newsModal" tabindex="-1" aria-labelledby="newsModalLabel" data-bs-backdrop="static" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <!-- Modal Header -->
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="newsModalLabel">Modal Title</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+
+                        <!-- Dynamic Content Section -->
+                        <div class="modal-body" id="modalContent">
+                            <p>Loading...</p>
+                        </div>
+
+                        <!-- Dynamic Footer -->
+                        <div class="modal-footer" id="modalFooter">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 

@@ -61,33 +61,40 @@ namespace Ass1.Controllers.User
 
                 if (user == null)
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid email or password");
+                    TempData["SuccessMessage"] = "Invalid email or password";
                     return View(model);
                 }
             }
-
-            // Using Claims for user authentication
-            var claims = new List<Claim>
+            if (user != null && (user.IsActive == null || user.IsActive == true))
+            {
+                // Using Claims for user authentication
+                var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.AccountId.ToString()),
-                new Claim(ClaimTypes.Name, user.AccountName),
+                new Claim(ClaimTypes.Name, user.AccountName ?? "Guest"),
                 new Claim(ClaimTypes.Role, user.AccountRole.ToString())
             };
 
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var authProperties = new AuthenticationProperties
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = model.RememberMe,
+                    ExpiresUtc = model.RememberMe ? DateTime.UtcNow.AddDays(1) : null
+                };
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity),
+                    authProperties
+                );
+
+                return RedirectToAction("Index", "Home");
+            }
+            else
             {
-                IsPersistent = model.RememberMe,
-                ExpiresUtc = model.RememberMe ? DateTime.UtcNow.AddDays(1) : null
-            };
-
-            await HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity),
-                authProperties
-            );
-
-            return RedirectToAction("Index", "Home");
+                TempData["ErrorMessage"] = "Your acount is being deactivated, please contact adminstrator.";
+                return View(model);
+            }
         }
 
 
@@ -100,19 +107,40 @@ namespace Ass1.Controllers.User
 
         [Authorize(Roles = "1")]
         [HttpGet]
-        public IActionResult Profile()
+        public IActionResult Profile(string id)
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            var user = _authService.GetById(short.Parse(userIdClaim.Value));
+            var user = _authService.GetById(short.Parse(id));
             var userViewModel = new ProfileViewModel
             {
                 AccountId = user.AccountId,
                 AccountName = user.AccountName,
                 AccountEmail = user.AccountEmail,
                 AccountPassword = user.AccountPassword,
-                SelectedRole = user.AccountRole ?? 2,
             };
             return View(userViewModel);
+        }
+
+        [Authorize(Roles = "1")]
+        [HttpPost]
+        public IActionResult Profile(ProfileViewModel model)
+        {
+            _authService.UpdateProfile(model);
+
+            var identity = (ClaimsIdentity)User.Identity;
+
+            var nameClaim = identity.FindFirst(ClaimTypes.Name);
+            if (nameClaim != null)
+            {
+                identity.RemoveClaim(nameClaim);
+                identity.AddClaim(new Claim(ClaimTypes.Name, model.AccountName));
+            }
+
+            HttpContext.SignOutAsync();
+            HttpContext.SignInAsync(new ClaimsPrincipal(identity));
+
+            TempData["SuccessMessage"] = "Account updated successfully !";
+
+            return RedirectToAction("Index", "Home");
         }
     }
 }

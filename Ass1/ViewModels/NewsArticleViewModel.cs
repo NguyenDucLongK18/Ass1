@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Ass1.Models;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
@@ -24,7 +25,8 @@ namespace Ass1.ViewModels
         [Required(ErrorMessage = "News Source is required.")]
         public string NewsSource { get; set; } = string.Empty;
 
-        public List<Category>? Categories { get; set; } = new();
+        [NotMapped]
+        public Category? Category { get; set; } = new();
 
         [Required(ErrorMessage = "Please select a category.")]
 
@@ -34,15 +36,24 @@ namespace Ass1.ViewModels
 
         public bool NewsStatus { get; set; } = true;
 
+        [NotMapped]
         public string? CreatedBy { get; set; }
+
+        [NotMapped]
         public string? UpdatedBy { get; set; }
 
         public DateTime? ModifiedDate { get; set; }
 
-        public List<Tag>? Tags { get; set; } = new();
+        public List<Tag>? SelectedTags { get; set; } = new();
 
         public List<int>? SelectedTagIds { get; set; }
 
         public List<string>? SelectedTagNames { get; set; }
+
+        public short? CreatedById { get; set; }
+
+        public short? UpdatedById { get; set; }
+
+        public string? newsTitleSearch { get; set; }
     }
 }

@@ -1,0 +1,75 @@
+﻿@model List<Ass1.ViewModels.NewsStatisticViewModel>
+
+@{
+    ViewData["Title"] = "News Statistics Report";
+}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4"> News Statistics Report</h2>
+
+    <!-- Date Filter Form -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" action="/NewsArticle/StatisticReport" class="row g-3 align-items-center">
+                <!-- Start Date -->
+                <div class="col-md-5">
+                    <label for="startDate" class="form-label">Start Date:</label>
+                    <input type="date" id="startDate" name="startDate"
+                           value="@ViewBag.StartDate" class="form-control" required>
+                </div>
+
+                <!-- End Date -->
+                <div class="col-md-5">
+                    <label for="endDate" class="form-label">End Date:</label>
+                    <input type="date" id="endDate" name="endDate"
+                           value="@ViewBag.EndDate" class="form-control" required>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary mt-4">Generate Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Display the Report -->
+    @if (Model.Any())
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h4 class="card-title mb-3">Report Results</h4>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Date</th>
+                                <th>Total Articles</th>
+                                <th>Published</th>
+                                <th>Draft</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var stat in Model)
+                            {
+                                <tr>
+                                    <td>@stat.Date.ToShortDateString()</td>
+                                    <td>@stat.TotalCount</td>
+                                    <td>@stat.PublishedCount</td>
+                                    <td>@stat.DraftCount</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else if (ViewBag.StartDate != null && ViewBag.EndDate != null)
+    {
+        <div class="alert alert-warning mt-4" role="alert">
+            No data available for the selected period.
+        </div>
+    }
+</div>

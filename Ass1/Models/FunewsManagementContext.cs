@@ -118,6 +118,7 @@ public partial class FunewsManagementContext : DbContext
             entity.Property(e => e.AccountEmail).HasMaxLength(70);
             entity.Property(e => e.AccountName).HasMaxLength(100);
             entity.Property(e => e.AccountPassword).HasMaxLength(70);
+            entity.Property(e => e.IsActive).HasColumnName("isActive");
         });
 
         modelBuilder.Entity<Tag>(entity =>
